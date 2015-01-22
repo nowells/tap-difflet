@@ -39,6 +39,7 @@
     "difflet": "^0.2.6",
     "duplexer": "^0.1.1",
     "hirestime": "^0.2.4",
+    "minimist": "^1.1.0",
     "pretty-ms": "^1.0.0",
     "tap-parser-yaml": "^0.7.1",
     "through2": "^0.6.2"

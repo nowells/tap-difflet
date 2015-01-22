@@ -18,6 +18,10 @@ var ansidiff  = require('ansidiff');
 var tap = parser();
 var out = through();
 var dup = duplexer(tap, out);
+var cliArgs = require('minimist')(process.argv);
+var progressOnly = !cliArgs.verbose;
+var assertIndent = progressOnly ? '' : '    ';
+var commentIndent = progressOnly ? '' : '  ';
 
 /* Helpers */
 
@@ -29,36 +33,53 @@ function output(str) {
 
 var timer   = hirestime();
 var errors  = [];
+var current = null;
+var last = current;
 
 tap.on('comment', function(comment) {
-    if (/^tests\s+[0-9]+$/gi.test(comment)) {
-        output('\n');
-        comment = chalk.white.bold(comment);
-    }
-    else if (/^pass\s+[0-9]+$/gi.test(comment)) {
-        comment = chalk.green.bold(comment);
-    }
-    else if (/^fail\s+[0-9]+$/gi.test(comment)) {
-        comment = chalk.red.bold(comment);
-    }
-    else if (/^ok$/gi.test(comment)) {
-        return;
-    }
-    else {
-        output('\n');
-        comment = chalk.white.bold(comment);
-    }
+  if (/^tests\s+[0-9]+$/gi.test(comment)) {
+    output('\n');
+    comment = chalk.white.bold(comment);
+  }
+  else if (/^pass\s+[0-9]+$/gi.test(comment)) {
+    comment = chalk.green.bold(comment);
+  }
+  else if (/^fail\s+[0-9]+$/gi.test(comment)) {
+    comment = chalk.red.bold(comment);
+  }
+  else if (/^ok$/gi.test(comment)) {
+    return;
+  }
+  else {
+    output('\n');
+    comment = chalk.white.bold(comment);
+  }
 
-    output('  ' + comment + '\n');
+  output(commentIndent + comment + '\n');
 });
 
 tap.on('assert', function(res) {
+  if (current !== last) {
+    current = last;
+    if (progressOnly) {
+      output('\n');
+    }
+  }
+
   if (res.ok) {
-    output('    ' + chalk.green.bold('✓') + ' ' + chalk.gray(res.name) + '\n');
+    if (progressOnly) {
+      output(chalk.green.bold('✓'));
+    }
+    else {
+      output(assertIndent + chalk.green.bold('✓') + ' ' + chalk.gray(res.name) + '\n');
+    }
   } else {
+    if (progressOnly) {
+      output('\n');
+    }
     assert = chalk.red.bold('⨯ ' + res.name + '\n');
     errors.push(chalk.white(assert));
-    output('    ' + errors[errors.length-1]);
+    output(assertIndent + errors[errors.length-1]);
   }
 });
 
@@ -133,13 +154,13 @@ tap.on('diag', function (diag) {
     }
   }
 
-  if (gotAt) {
+  if (!progressOnly && gotAt) {
     str = str + '\n\n' + chalk.grey('At: ' + at);
   }
 
   if (str) {
     str = '\n' + str;
-    str = str.replace(/\n/g, '\n      ');
+    str = str.replace(/\n/g, '\n  ' + assertIndent);
     errors[errors.length-1] += str;
     output(str);
     output('\n');

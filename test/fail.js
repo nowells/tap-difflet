@@ -20,9 +20,11 @@ test('2 === 1', function(assert) {
 });
 
 test('{a: 404} === {a: 42}', function(assert) {
-  assert.plan(1);
+  assert.plan(3);
+  assert.equal(true, true);
   setTimeout(function () {
     assert.deepEqual({a: 404}, {a: 42});
+    assert.equal(true, true);
   }, 500);
 });
 
